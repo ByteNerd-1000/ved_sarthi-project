@@ -27,12 +27,176 @@ const popupProfileHeight = document.getElementById('popupProfileHeight');
 const popupProfileWeight = document.getElementById('popupProfileWeight');
 
 // ── Backend configuration ────────────────────────────────────────────────────
-// Replace RENDER_BACKEND_URL with your actual Render service URL after deploying,
-// e.g. "https://veda-sarthi-backend.onrender.com"
-// Leave as empty string to fall back to localhost during local development.
-const RENDER_BACKEND_URL = 'https://ved-sarth1-project.onrender.com';
+const RENDER_BACKEND_URL = 'https://ved-sarthi-project.onrender.com';
+const LOCAL_BACKEND_URL  = 'http://localhost:8002';
 
-const API_BASE_URL = RENDER_BACKEND_URL || 'http://localhost:8002';
+// Resolved at runtime: use Render if reachable, else localhost
+let API_BASE_URL = RENDER_BACKEND_URL;
+
+// Backend wake-up state
+let backendReady = false;   // becomes true after first successful /health
+let wakeUpAttempted = false;
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Lightweight Markdown → HTML renderer ────────────────────────────────────
+function renderMarkdown(text) {
+    if (!text) return '';
+    // Escape HTML first
+    let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Bold (**text** or __text__)
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+    // Italic (*text* or _text_)
+    html = html.replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+    html = html.replace(/_([^_\n]+?)_/g, '<em>$1</em>');
+
+    // Convert lines to array for list handling
+    const lines = html.split('\n');
+    const result = [];
+    let inUL = false, inOL = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // Unordered list item
+        if (/^[\*\-•] (.+)/.test(line)) {
+            if (!inUL) { result.push('<ul>'); inUL = true; }
+            if (inOL)  { result.push('</ol>'); inOL = false; }
+            result.push('<li>' + line.replace(/^[\*\-•] /, '') + '</li>');
+            continue;
+        }
+
+        // Ordered list item
+        if (/^\d+\.\s+(.+)/.test(line)) {
+            if (!inOL) { result.push('<ol>'); inOL = true; }
+            if (inUL)  { result.push('</ul>'); inUL = false; }
+            result.push('<li>' + line.replace(/^\d+\.\s+/, '') + '</li>');
+            continue;
+        }
+
+        // Close any open list
+        if (inUL) { result.push('</ul>'); inUL = false; }
+        if (inOL) { result.push('</ol>'); inOL = false; }
+
+        if (line === '') {
+            result.push('<br>');
+        } else {
+            result.push('<p>' + line + '</p>');
+        }
+    }
+
+    if (inUL) result.push('</ul>');
+    if (inOL) result.push('</ol>');
+
+    return result.join('');
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Backend wake-up utility ───────────────────────────────────────────────────
+async function pingHealth(baseUrl, timeoutMs = 5000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const res = await fetch(`${baseUrl}/health`, { signal: controller.signal });
+        clearTimeout(timer);
+        return res.ok;
+    } catch {
+        clearTimeout(timer);
+        return false;
+    }
+}
+
+/**
+ * Ensure the backend is awake before making a chat request.
+ * 1. Try Render first (fast ping). If healthy → use Render.
+ * 2. If not → try localhost (fast ping). If healthy → use localhost.
+ * 3. If neither responds quickly, start a 60-second countdown wake-up
+ *    loop, showing status in a non-blocking banner.
+ * Returns true when a healthy backend is found, false on total failure.
+ */
+async function ensureBackendReady() {
+    if (backendReady) return true;
+
+    // Quick check Render
+    if (await pingHealth(RENDER_BACKEND_URL, 4000)) {
+        API_BASE_URL = RENDER_BACKEND_URL;
+        backendReady = true;
+        return true;
+    }
+    // Quick check localhost
+    if (await pingHealth(LOCAL_BACKEND_URL, 2000)) {
+        API_BASE_URL = LOCAL_BACKEND_URL;
+        backendReady = true;
+        return true;
+    }
+
+    // Neither responded — show wake-up banner and retry for up to 90 s
+    showWakeUpBanner();
+    const MAX_WAIT = 90;   // seconds
+    for (let elapsed = 0; elapsed < MAX_WAIT; elapsed += 5) {
+        await new Promise(r => setTimeout(r, 5000));
+        updateWakeUpBanner(MAX_WAIT - elapsed - 5);
+
+        if (await pingHealth(RENDER_BACKEND_URL, 4000)) {
+            API_BASE_URL = RENDER_BACKEND_URL;
+            backendReady = true;
+            hideWakeUpBanner();
+            return true;
+        }
+        if (await pingHealth(LOCAL_BACKEND_URL, 2000)) {
+            API_BASE_URL = LOCAL_BACKEND_URL;
+            backendReady = true;
+            hideWakeUpBanner();
+            return true;
+        }
+    }
+
+    hideWakeUpBanner();
+    return false;
+}
+
+// ── Wake-up banner UI helpers ─────────────────────────────────────────────────
+function showWakeUpBanner() {
+    let banner = document.getElementById('wakeUpBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'wakeUpBanner';
+        banner.style.cssText = [
+            'position:fixed', 'bottom:80px', 'left:50%',
+            'transform:translateX(-50%)', 'background:linear-gradient(135deg,#0891B2,#10B981)',
+            'color:#fff', 'padding:12px 24px', 'border-radius:12px',
+            'box-shadow:0 8px 24px rgba(0,0,0,.2)', 'z-index:99999',
+            'font-size:14px', 'font-weight:500', 'display:flex',
+            'align-items:center', 'gap:10px', 'max-width:90vw', 'text-align:center'
+        ].join(';');
+        document.body.appendChild(banner);
+    }
+    banner.innerHTML = `
+        <span style="font-size:20px;animation:spin 1.2s linear infinite;display:inline-block">⏳</span>
+        <span id="wakeUpText">Waking up the server… please wait (~30 s)</span>`;
+    banner.style.display = 'flex';
+
+    // spin keyframe
+    if (!document.getElementById('spinStyle')) {
+        const s = document.createElement('style');
+        s.id = 'spinStyle';
+        s.textContent = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+    }
+}
+function updateWakeUpBanner(secsLeft) {
+    const el = document.getElementById('wakeUpText');
+    if (el) el.textContent = `Waking up the server… ${secsLeft > 0 ? secsLeft + 's left' : 'almost there!'}`;
+}
+function hideWakeUpBanner() {
+    const banner = document.getElementById('wakeUpBanner');
+    if (banner) banner.style.display = 'none';
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Persistent user id (so history works across refresh)
@@ -91,10 +255,20 @@ async function sendMessage() {
     chatInput.value = '';
     chatInput.style.height = 'auto';
 
+    // Disable input while processing
+    if (sendBtn)    sendBtn.disabled = true;
+    if (chatInput)  chatInput.disabled = true;
+
     // Show typing indicator
     showTypingIndicator();
 
     try {
+        // Make sure the backend is awake (handles cold-start automatically)
+        const serverUp = await ensureBackendReady();
+        if (!serverUp) {
+            throw new Error('Server unreachable after 90 seconds');
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/chatbot/chat`, {
             method: 'POST',
             headers: {
@@ -118,7 +292,18 @@ async function sendMessage() {
     } catch (error) {
         console.error('Error calling backend:', error);
         removeTypingIndicator();
-        addAIBackendResponse('Sorry, I could not reach the server. The backend may be waking up (free tier). Please wait 30 seconds and try again.');
+        // Reset backendReady so next message retries the wake-up
+        backendReady = false;
+        addAIBackendResponse(
+            '⚠️ Could not reach the server. ' +
+            (error.message.includes('90') 
+                ? 'The server did not wake up in time. Please try again in a moment.'
+                : 'Please check your connection or try again shortly.')
+        );
+    } finally {
+        if (sendBtn)   sendBtn.disabled = false;
+        if (chatInput) chatInput.disabled = false;
+        if (chatInput) chatInput.focus();
     }
 }
 
@@ -154,7 +339,7 @@ function addMessage(text, type) {
     scrollToBottom();
 }
 
-// Add AI response coming from backend (plain text)
+// Add AI response coming from backend (renders markdown)
 function addAIBackendResponse(text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message ai';
@@ -167,9 +352,9 @@ function addAIBackendResponse(text) {
     content.className = 'message-content';
 
     const textDiv = document.createElement('div');
-    textDiv.className = 'message-text';
-    // Use textContent to avoid injecting HTML
-    textDiv.textContent = text;
+    textDiv.className = 'message-text markdown-body';
+    // Render markdown so **bold**, lists, etc. display properly
+    textDiv.innerHTML = renderMarkdown(text);
 
     const time = document.createElement('div');
     time.className = 'message-time';
