@@ -30,7 +30,7 @@ const popupProfileWeight = document.getElementById('popupProfileWeight');
 // Replace RENDER_BACKEND_URL with your actual Render service URL after deploying,
 // e.g. "https://veda-sarthi-backend.onrender.com"
 // Leave as empty string to fall back to localhost during local development.
-const RENDER_BACKEND_URL = 'https://ved-sarthi-project.onrender.com';
+const RENDER_BACKEND_URL = 'https://ved-sarth1-project.onrender.com';
 
 const API_BASE_URL = RENDER_BACKEND_URL || 'http://localhost:8002';
 // ─────────────────────────────────────────────────────────────────────────────
