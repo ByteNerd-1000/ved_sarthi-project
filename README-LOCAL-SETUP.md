@@ -69,6 +69,7 @@ The frontend is built with pure HTML, CSS, and JavaScript. It connects directly 
 
 ## Step 3: Access the Application
 
+3. temp
 1. Open your web browser.
 2. Navigate to **[http://localhost:8000](http://localhost:8000)**.
 3. The Veda Sarthi chatbot interface should load. You can start typing messages, and the frontend will automatically connect to your local backend to generate AI responses.
