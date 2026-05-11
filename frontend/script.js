@@ -30,7 +30,7 @@ const popupProfileWeight = document.getElementById('popupProfileWeight');
 // Replace RENDER_BACKEND_URL with your actual Render service URL after deploying,
 // e.g. "https://veda-sarthi-backend.onrender.com"
 // Leave as empty string to fall back to localhost during local development.
-const RENDER_BACKEND_URL = '';   // ← PASTE YOUR RENDER URL HERE AFTER DEPLOY
+const RENDER_BACKEND_URL = 'https://ved-sarthi-project.onrender.com';
 
 const API_BASE_URL = RENDER_BACKEND_URL || 'http://localhost:8002';
 // ─────────────────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ async function sendMessage() {
     } catch (error) {
         console.error('Error calling backend:', error);
         removeTypingIndicator();
-        addAIBackendResponse('Sorry, I could not reach the server. Please make sure the backend is running on http://localhost:8000.');
+        addAIBackendResponse('Sorry, I could not reach the server. The backend may be waking up (free tier). Please wait 30 seconds and try again.');
     }
 }
 
