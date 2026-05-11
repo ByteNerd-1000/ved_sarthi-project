@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veda Sarthi – AI Health Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-section">
+                <div class="logo">
+                    <div class="logo-icon">🏥</div>
+                    <div>
+                        <div class="logo-text">Veda Sarthi</div>
+                        <div class="logo-subtitle">AI Health Assistant</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" data-section="home">
+                    <span class="nav-icon">🏠</span>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" data-section="symptoms">
+                    <span class="nav-icon">🔍</span>
+                    <span>Symptoms Checker</span>
+                </div>
+                <div class="nav-item" data-section="tips">
+                    <span class="nav-icon">💡</span>
+                    <span>Health Tips</span>
+                </div>
+                <div class="nav-item" data-section="history">
+                    <span class="nav-icon">📝</span>
+                    <span>Chat History</span>
+                </div>
+                <div class="nav-item" data-section="emergency">
+                    <span class="nav-icon">🚨</span>
+                    <span>Emergency</span>
+                </div>
+                <div class="nav-item" data-section="profile">
+                    <span class="nav-icon">👤</span>
+                    <span>Profile</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="nav-item" id="findHospitalsNav">
+                    <span class="nav-icon">🏥</span>
+                    <span>Find Hospitals</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="header-info">
+                        <div class="header-title">Veda Sarthi</div>
+                        <div class="header-subtitle">Your trusted AI health companion</div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="language-selector">
+                        <span>🌐</span>
+                        <select id="languageSelect">
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी (Hindi)</option>
+                            <option value="mr">मराठी (Marathi)</option>
+                            <option value="ta">தமிழ் (Tamil)</option>
+                            <option value="te">తెలుగు (Telugu)</option>
+                            <option value="bn">বাংলা (Bengali)</option>
+                            <option value="gu">ગુજરાતી (Gujarati)</option>
+                        </select>
+                    </div>
+                    <div class="user-profile" id="headerProfileIcon" title="User Profile">👤</div>
+                </div>
+            </header>
+
+            <!-- Chat Section -->
+            <section class="chat-section" id="chatSection">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome Screen -->
+                    <div class="welcome-screen">
+                        <div class="welcome-icon">🏥</div>
+                        <h1 class="welcome-title">Welcome to Veda Sarthi</h1>
+                        <p class="welcome-subtitle">
+                            Your personal AI health assistant. Ask me about symptoms, medications, health tips, or get personalized wellness advice.
+                        </p>
+
+                        <div class="quick-actions">
+                            <div class="quick-action-card" onclick="sendCategoryQuickQuery('nutrition')">
+                                <div class="quick-action-icon">🥗</div>
+                                <div class="quick-action-title">Nutrition Advice</div>
+                                <div class="quick-action-desc">Get diet recommendations</div>
+                            </div>
+                            <div class="quick-action-card" onclick="sendCategoryQuickQuery('exercise')">
+                                <div class="quick-action-icon">🏃</div>
+                                <div class="quick-action-title">Exercise Tips</div>
+                                <div class="quick-action-desc">Fitness guidance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-section">
+                    <div class="input-wrapper">
+                        <div class="input-container">
+                            <textarea 
+                                class="chat-input" 
+                                id="chatInput" 
+                                placeholder="Type your health-related question here..."
+                                rows="1"
+                            ></textarea>
+                            <button class="voice-button" id="voiceBtn" title="Voice input" aria-label="Voice input">
+                                🎤
+                            </button>
+                        </div>
+                        <button class="send-button" id="sendBtn" aria-label="Send message">
+                            ➤
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chat History Section -->
+            <section class="history-section" id="historySection" style="display: none;">
+                <div class="panel-card">
+                    <h3 class="panel-title">
+                        <span>📝</span>
+                        <span>Chat History</span>
+                    </h3>
+                    <div id="historyList" class="history-list">
+                        <p class="history-empty">No previous chats found.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section class="profile-section" id="profileSection" style="display: none;">
+                <div class="panel-card">
+                    <h3 class="panel-title">
+                        <span>👤</span>
+                        <span>User Profile</span>
+                    </h3>
+                    <div class="profile-form">
+                        <label>
+                            Name
+                            <input type="text" id="profileName" placeholder="Enter your name">
+                        </label>
+                        <label>
+                            Height (cm)
+                            <input type="number" id="profileHeight" placeholder="e.g. 170">
+                        </label>
+                        <label>
+                            Weight (kg)
+                            <input type="number" id="profileWeight" placeholder="e.g. 65">
+                        </label>
+                        <button class="symptom-button" id="saveProfileBtn">Save Profile</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Emergency Section -->
+            <section class="emergency-section" id="emergencySection" style="display: none;">
+                <div class="panel-card">
+                    <h3 class="panel-title">
+                        <span>🚨</span>
+                        <span>Emergency Numbers</span>
+                    </h3>
+                    <p style="font-size: 13px; color: #64748B; margin-bottom: 12px;">
+                        Tap a number to call quickly in case of an emergency.
+                    </p>
+                    <div class="emergency-list">
+                        <a href="tel:112" class="emergency-item">
+                            <div class="emergency-item-title">National Emergency Number</div>
+                            <div class="emergency-item-number">112</div>
+                            <div class="emergency-item-desc">All-in-one emergency helpline</div>
+                        </a>
+                        <a href="tel:108" class="emergency-item">
+                            <div class="emergency-item-title">Ambulance</div>
+                            <div class="emergency-item-number">108</div>
+                            <div class="emergency-item-desc">Medical emergencies and accidents</div>
+                        </a>
+                        <a href="tel:100" class="emergency-item">
+                            <div class="emergency-item-title">Police</div>
+                            <div class="emergency-item-number">100</div>
+                            <div class="emergency-item-desc">Law and order, crime, or safety threats</div>
+                        </a>
+                        <a href="tel:101" class="emergency-item">
+                            <div class="emergency-item-title">Fire Brigade</div>
+                            <div class="emergency-item-number">101</div>
+                            <div class="emergency-item-desc">Fire and rescue emergencies</div>
+                        </a>
+                        <a href="tel:1091" class="emergency-item">
+                            <div class="emergency-item-title">Women Helpline</div>
+                            <div class="emergency-item-number">1091</div>
+                            <div class="emergency-item-desc">Support for women in distress</div>
+                        </a>
+                        <a href="tel:1098" class="emergency-item">
+                            <div class="emergency-item-title">Child Helpline</div>
+                            <div class="emergency-item-number">1098</div>
+                            <div class="emergency-item-desc">Emergency support for children</div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <!-- Quick Symptom Checker -->
+            <div class="panel-card" id="symptomCard" style="display: none;">
+                <h3 class="panel-title">
+                    <span>🔍</span>
+                    <span>Quick Symptom Checker</span>
+                </h3>
+                <input type="text" class="symptom-input" placeholder="Enter your symptoms..." id="symptomInput">
+                <button class="symptom-button" onclick="checkSymptom()">Check Now</button>
+            </div>
+
+            <!-- Daily Health Tips -->
+            <div class="panel-card" id="tipsCard" style="display: none;">
+                <h3 class="panel-title">
+                    <span>💡</span>
+                    <span>Daily Health Tips</span>
+                </h3>
+                <div class="health-tip">
+                    <div class="tip-title">Stay Hydrated</div>
+                    <div class="tip-text">Drink at least 8 glasses of water daily to maintain optimal health and energy levels.</div>
+                </div>
+                <div class="health-tip">
+                    <div class="tip-title">Morning Exercise</div>
+                    <div class="tip-text">Start your day with 15 minutes of light stretching to boost circulation and mood.</div>
+                </div>
+                <div class="health-tip">
+                    <div class="tip-title">Healthy Sleep</div>
+                    <div class="tip-text">Aim for 7-8 hours of quality sleep each night for better cognitive function.</div>
+                </div>
+            </div>
+
+            <!-- Recent Queries -->
+            <div class="panel-card" id="recentQueriesCard">
+                <h3 class="panel-title">
+                    <span>📝</span>
+                    <span>Recent Queries</span>
+                </h3>
+                <div class="recent-query" onclick="sendQuickQuery('What causes lower back pain?')">
+                    <div class="query-text">What causes lower back pain?</div>
+                    <div class="query-time">2 hours ago</div>
+                </div>
+                <div class="recent-query" onclick="sendQuickQuery('Best foods for immunity')">
+                    <div class="query-text">Best foods for immunity</div>
+                    <div class="query-time">Yesterday</div>
+                </div>
+                <div class="recent-query" onclick="sendQuickQuery('How to reduce stress naturally?')">
+                    <div class="query-text">How to reduce stress naturally?</div>
+                    <div class="query-time">3 days ago</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Profile popup (read-only summary) -->
+    <div id="profilePopup" class="profile-popup" style="display: none;">
+        <div class="profile-popup-card">
+            <div class="profile-popup-header">
+                <span>Profile</span>
+                <button id="closeProfilePopup" class="profile-popup-close" aria-label="Close profile view">×</button>
+            </div>
+            <div class="profile-popup-body">
+                <div class="profile-popup-field">
+                    <span class="label">Name</span>
+                    <span class="value" id="popupProfileName">Not set</span>
+                </div>
+                <div class="profile-popup-field">
+                    <span class="label">Height</span>
+                    <span class="value" id="popupProfileHeight">Not set</span>
+                </div>
+                <div class="profile-popup-field">
+                    <span class="label">Weight</span>
+                    <span class="value" id="popupProfileWeight">Not set</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Voice Button (visible on mobile) -->
+    <button class="floating-voice-btn" onclick="toggleVoice()" aria-label="Voice input">
+        🎤
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>

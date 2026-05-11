@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: veda-sarthi-backend
+    env: python
+    region: singapore  # change to your preferred region
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false   # you will set this manually in Render dashboard
+      - key: PYTHON_VERSION
+        value: 3.11.0

@@ -1,0 +1,30 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment secrets - NEVER commit real .env
+backend/.env
+
+# Database (local dev only - Render uses ephemeral storage)
+backend/*.db
+backend/*.sqlite3
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node (if ever added)
+node_modules/
+.next/
+dist/
+
+# Logs
+*.log
